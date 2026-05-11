@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Analyst Assessment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #ffffff;
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        body {
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 2rem;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-content h1 {
+            font-size: 18px;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .question-counter {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #007bff;
+            transition: width 0.3s ease;
+        }
+
+        .question-section {
+            margin-bottom: 2rem;
+            display: none;
+        }
+
+        .question-section.active {
+            display: block;
+        }
+
+        .question {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 1.5rem;
+        }
+
+        .option-button {
+            padding: 12px 16px;
+            text-align: left;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            color: #333;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-family: inherit;
+        }
+
+        .option-button:hover:not(:disabled) {
+            background: #f5f5f5;
+        }
+
+        .option-button.selected {
+            border: 2px solid #007bff;
+            background: #f0f7ff;
+        }
+
+        .option-button.correct {
+            border: 2px solid #28a745;
+            background: #f0f8f5;
+            color: #28a745;
+            cursor: default;
+        }
+
+        .option-button.incorrect {
+            border: 2px solid #dc3545;
+            background: #fdf8f8;
+            color: #dc3545;
+            cursor: default;
+        }
+
+        .option-button:disabled {
+            cursor: default;
+        }
+
+        .option-letter {
+            font-size: 12px;
+            margin-top: 1px;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        .feedback {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid;
+            font-size: 14px;
+            line-height: 1.5;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+        }
+
+        .feedback.correct {
+            background: #f0f8f5;
+            border-color: #28a745;
+            color: #28a745;
+        }
+
+        .feedback.incorrect {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            color: #2196f3;
+        }
+
+        .feedback-title {
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        .feedback-text {
+            font-size: 13px;
+        }
+
+        .navigation {
+            display: flex;
+            gap: 12px;
+            justify-content: space-between;
+        }
+
+        .nav-button {
+            padding: 10px 16px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            color: #333;
+            transition: all 0.2s ease;
+        }
+
+        .nav-button:hover:not(:disabled) {
+            background: #f5f5f5;
+        }
+
+        .nav-button:disabled {
+            color: #999;
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .primary-button {
+            flex: 1;
+            background: #007bff;
+            border-color: #007bff;
+            color: white;
+        }
+
+        .primary-button:hover:not(:disabled) {
+            background: #0056b3;
+        }
+
+        .primary-button:disabled {
+            background: #e9ecef;
+            border-color: #e9ecef;
+            color: #999;
+        }
+
+        /* Results Page Styles */
+        .results-view {
+            display: none;
+        }
+
+        .results-view.active {
+            display: block;
+        }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .results-header h1 {
+            font-size: 28px;
+            font-weight: 500;
+            margin: 0 0 8px 0;
+        }
+
+        .results-header p {
+            color: #666;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .score-card {
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .score-value {
+            font-size: 48px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .score-subtext {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        .score-feedback {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 14px;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+
+        .review-section {
+            margin-bottom: 2rem;
+        }
+
+        .review-section h2 {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .review-item {
+            padding: 1rem;
+            margin-bottom: 12px;
+            border-left: 3px solid;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .review-item.correct {
+            border-left-color: #28a745;
+            background: #f0f8f5;
+        }
+
+        .review-item.incorrect {
+            border-left-color: #dc3545;
+            background: #fdf8f8;
+        }
+
+        .review-status {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .review-status.correct {
+            color: #28a745;
+        }
+
+        .review-status.incorrect {
+            color: #dc3545;
+        }
+
+        .review-text {
+            font-size: 13px;
+            color: #666;
+        }
+
+        /* Action buttons */
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 2rem;
+        }
+
+        .action-button {
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            color: #333;
+            transition: all 0.2s ease;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .action-button:hover {
+            background: #f5f5f5;
+            border-color: #999;
+        }
+
+        .action-button.primary {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+
+        .action-button.primary:hover {
+            background: #218838;
+        }
+
+        .action-button.secondary {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .action-button.secondary:hover {
+            background: #0056b3;
+        }
+
+        .retake-button {
+            width: 100%;
+            padding: 12px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            color: #333;
+            transition: all 0.2s ease;
+        }
+
+        .retake-button:hover {
+            background: #f5f5f5;
+        }
+
+        .copy-notification {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1000;
+        }
+
+        .copy-notification.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                padding: 0;
+            }
+
+            .container {
+                max-width: 100%;
+            }
+
+            .action-buttons,
+            .retake-button,
+            .navigation {
+                display: none !important;
+            }
+
+            .results-view {
+                display: block;
+            }
+
+            .review-item {
+                page-break-inside: avoid;
+            }
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #1a1a1a;
+                color: #e5e5e5;
+            }
+
+            .question-counter,
+            .score-subtext {
+                color: #999;
+            }
+
+            .progress-bar {
+                background: #333;
+            }
+
+            .option-button {
+                background: #2a2a2a;
+                border-color: #444;
+                color: #e5e5e5;
+            }
+
+            .option-button:hover:not(:disabled) {
+                background: #333;
+            }
+
+            .option-button.selected {
+                background: #1a3a5c;
+            }
+
+            .nav-button {
+                background: #2a2a2a;
+                border-color: #444;
+                color: #e5e5e5;
+            }
+
+            .nav-button:hover:not(:disabled) {
+                background: #333;
+            }
+
+            .primary-button {
+                background: #007bff;
+                border-color: #007bff;
+            }
+
+            .primary-button:disabled {
+                background: #333;
+                border-color: #444;
+            }
+
+            .score-card {
+                background: #2a2a2a;
+            }
+
+            .score-feedback {
+                background: #1a1a1a;
+                border-color: #444;
+                color: #999;
+            }
+
+            .action-button {
+                background: #2a2a2a;
+                border-color: #444;
+                color: #e5e5e5;
+            }
+
+            .action-button:hover {
+                background: #333;
+            }
+
+            .retake-button {
+                background: #2a2a2a;
+                border-color: #444;
+                color: #e5e5e5;
+            }
+
+            .retake-button:hover {
+                background: #333;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="copyNotification" class="copy-notification">
+        Results copied to clipboard!
+    </div>
+
+    <div class="container">
+        <!-- Assessment View -->
+        <div id="assessmentView" class="assessment-view active">
+            <div class="header">
+                <div class="header-content">
+                    <h1>Application Support Analyst</h1>
+                    <span class="question-counter">Question <span id="currentQuestion">1</span>/<span id="totalQuestions">10</span></span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <div class="question-section active" id="questionSection">
+                <h2 class="question" id="questionText"></h2>
+                <div class="options-grid" id="optionsGrid"></div>
+                <div class="feedback" id="feedback">
+                    <div class="feedback-title" id="feedbackTitle"></div>
+                    <div class="feedback-text" id="feedbackText"></div>
+                </div>
+            </div>
+
+            <div class="navigation">
+                <button class="nav-button" id="prevButton" onclick="handlePrevious()">Previous</button>
+                <button class="nav-button primary-button" id="nextButton" onclick="handleNext()">Next →</button>
+            </div>
+        </div>
+
+        <!-- Results View -->
+        <div id="resultsView" class="results-view">
+            <div class="results-header">
+                <h1>Assessment Complete</h1>
+                <p>Application Support Analyst Interview</p>
+            </div>
+
+            <div class="score-card" id="printableSection">
+                <div class="score-value" id="scoreValue"></div>
+                <div class="score-subtext">
+                    <span id="correctCount">0</span> out of <span id="totalCount">10</span> correct
+                </div>
+                <div class="score-feedback" id="scoreFeedback"></div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="action-button secondary" onclick="printResults()">
+                    <span>🖨️</span> Print Results
+                </button>
+                <button class="action-button secondary" onclick="downloadAsText()">
+                    <span>📥</span> Download Results
+                </button>
+                <button class="action-button primary" onclick="copyToClipboard()">
+                    <span>📋</span> Copy & Email to Interviewer
+                </button>
+            </div>
+
+            <div class="review-section">
+                <h2>Review Your Answers</h2>
+                <div id="reviewItems"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const riddles = [
+            {
+                id: 1,
+                question: "A user reports their application keeps crashing every time they open a specific file. The file works fine on a colleague's computer. What are three things you'd check before escalating?",
+                type: "troubleshooting",
+                options: [
+                    { text: "Only check if the file is corrupted", correct: false },
+                    { text: "User's permissions, file format compatibility, and system resources (RAM, disk)", correct: true },
+                    { text: "Ask the user to delete the file and recreate it", correct: false },
+                    { text: "Immediately escalate to the development team", correct: false }
+                ],
+                feedback: "Correct! A good support analyst systematically checks user permissions, file compatibility, and system resources before escalating. This is the foundation of troubleshooting."
+            },
+            {
+                id: 2,
+                question: "You receive a ticket: 'System is slow.' Nothing obvious is wrong. How do you troubleshoot this?",
+                type: "process",
+                options: [
+                    { text: "Tell the user to buy more RAM", correct: false },
+                    { text: "Ask clarifying questions: When did it start? Is it slow for specific tasks? Check internet speed, storage space, browser cache, and other apps running", correct: true },
+                    { text: "Restart their computer without asking", correct: false },
+                    { text: "Close all applications immediately", correct: false }
+                ],
+                feedback: "Correct! Gathering information through clarifying questions is critical. 'Slow' is vague—you need specifics about timing, scope, and system state."
+            },
+            {
+                id: 3,
+                question: "Five users report the same error message. Four users don't. What does this tell you?",
+                type: "diagnostic",
+                options: [
+                    { text: "It's a system-wide bug that affects everyone", correct: false },
+                    { text: "It's likely user-specific (permissions, settings, data, system config) rather than a system-wide bug", correct: true },
+                    { text: "The application needs to be rebuilt", correct: false },
+                    { text: "Only those 5 users are using it incorrectly", correct: false }
+                ],
+                feedback: "Correct! This is pattern recognition—when only some users experience an issue, you're looking at user-specific factors, not a universal bug."
+            },
+            {
+                id: 4,
+                question: "A user is frustrated and says your application is 'broken and useless.' They won't give you details. How do you get the information you need?",
+                type: "communication",
+                options: [
+                    { text: "Tell them to read the manual first", correct: false },
+                    { text: "Empathize, ask open-ended questions, break it into small steps, stay calm and patient", correct: true },
+                    { text: "Explain that the app works fine for other users", correct: false },
+                    { text: "Suggest they use a different application", correct: false }
+                ],
+                feedback: "Correct! De-escalation and patience are core support skills. Open-ended questions and empathy help you extract useful troubleshooting information."
+            },
+            {
+                id: 5,
+                question: "You find a workaround for a user's issue but don't know the root cause yet. Do you give them the workaround or keep investigating?",
+                type: "prioritization",
+                options: [
+                    { text: "Tell them to wait while you investigate", correct: false },
+                    { text: "Give them the workaround immediately so they can work, but continue investigating the root cause", correct: true },
+                    { text: "Only provide a workaround if it's permanent", correct: false },
+                    { text: "Escalate without providing any solution", correct: false }
+                ],
+                feedback: "Correct! User productivity comes first—provide immediate relief via workaround while continuing root-cause analysis in the background."
+            },
+            {
+                id: 6,
+                question: "An application works fine in the office but fails when accessed remotely. The code is identical. What could be different?",
+                type: "technical",
+                options: [
+                    { text: "Only the code has changed", correct: false },
+                    { text: "Network/firewall settings, VPN config, internet bandwidth, DNS differences, security software, or browser/system differences on remote device", correct: true },
+                    { text: "The remote user is using the wrong password", correct: false },
+                    { text: "Remote access is inherently insecure", correct: false }
+                ],
+                feedback: "Correct! When behavior differs between locations with identical code, you're troubleshooting environment differences—network, security, and system config."
+            },
+            {
+                id: 7,
+                question: "A user asks you a question about a feature that's clearly covered in your company's help documentation. How should you respond?",
+                type: "knowledge",
+                options: [
+                    { text: "Just send them a link to the documentation and close the ticket", correct: false },
+                    { text: "Briefly explain the solution, then reference the documentation for future reference", correct: true },
+                    { text: "Tell them to read the documentation themselves", correct: false },
+                    { text: "Answer everything without mentioning the documentation", correct: false }
+                ],
+                feedback: "Correct! The best approach is to both help the user immediately AND teach them where to find answers in the future. This reduces future tickets and empowers users."
+            },
+            {
+                id: 8,
+                question: "When should you escalate a ticket to the development team instead of handling it yourself?",
+                type: "escalation",
+                options: [
+                    { text: "When it takes more than 5 minutes to resolve", correct: false },
+                    { text: "When it's a suspected bug or code issue that's beyond standard troubleshooting, or a feature request", correct: true },
+                    { text: "When the user seems important or high-profile", correct: false },
+                    { text: "Never—support should handle everything", correct: false }
+                ],
+                feedback: "Correct! Escalation should be based on the technical nature of the problem, not the time spent or user status. Clear escalation criteria prevent bottlenecks and ensure proper resource allocation."
+            },
+            {
+                id: 9,
+                question: "You have 15 support tickets waiting. How do you decide which to handle first?",
+                type: "prioritization",
+                options: [
+                    { text: "Handle them in the order they arrived (FIFO)", correct: false },
+                    { text: "Prioritize by urgency/impact: critical issues affecting many users, then urgent individual issues, then general requests", correct: true },
+                    { text: "Start with the easiest ones to build momentum", correct: false },
+                    { text: "Let users know you'll get to them eventually", correct: false }
+                ],
+                feedback: "Correct! Effective triage prioritizes by business impact. A critical system outage affecting 100 users comes before one user's minor feature question. This maximizes overall productivity."
+            },
+            {
+                id: 10,
+                question: "A remote user says they cannot access the application at all. It's working for everyone else. What's your first diagnostic step?",
+                type: "troubleshooting",
+                options: [
+                    { text: "Ask them to uninstall and reinstall the application", correct: false },
+                    { text: "Ask if they can access other websites/applications to verify their internet connection and basic access works", correct: true },
+                    { text: "Immediately tell them it's a network issue and escalate to IT", correct: false },
+                    { text: "Assume their device is broken and suggest they get a new one", correct: false }
+                ],
+                feedback: "Correct! Before assuming it's an application problem, you need to verify their basic connectivity works. This simple check eliminates 80% of access issues and saves escalation time."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let answers = {};
+        let selectedAnswer = null;
+        let assessmentScore = 0;
+        let assessmentCorrectCount = 0;
+
+        // Prevent page refresh - COMPLETELY DISABLED
+        window.addEventListener('beforeunload', function(e) {
+            e.preventDefault();
+            e.returnValue = '';
+            return '';
+        });
+
+        // Prevent all refresh methods
+        document.addEventListener('keydown', function(e) {
+            // Block F5
+            if (e.key === 'F5') {
+                e.preventDefault();
+                alert('Refresh is disabled. You can only take this assessment once.');
+                return false;
+            }
+            // Block Ctrl+R (Windows/Linux)
+            if (e.ctrlKey && e.key === 'r') {
+                e.preventDefault();
+                alert('Refresh is disabled. You can only take this assessment once.');
+                return false;
+            }
+            // Block Cmd+R (Mac)
+            if (e.metaKey && e.key === 'r') {
+                e.preventDefault();
+                alert('Refresh is disabled. You can only take this assessment once.');
+                return false;
+            }
+            // Block Ctrl+Shift+R (hard refresh Windows/Linux)
+            if (e.ctrlKey && e.shiftKey && e.key === 'r') {
+                e.preventDefault();
+                alert('Refresh is disabled. You can only take this assessment once.');
+                return false;
+            }
+            // Block Cmd+Shift+R (hard refresh Mac)
+            if (e.metaKey && e.shiftKey && e.key === 'r') {
+                e.preventDefault();
+                alert('Refresh is disabled. You can only take this assessment once.');
+                return false;
+            }
+        });
+
+        // Prevent right-click context menu (to block "reload" option)
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            alert('Right-click is disabled during the assessment.');
+            return false;
+        });
+
+        // Prevent browser back button
+        window.addEventListener('popstate', function() {
+            window.history.forward();
+            alert('You cannot navigate away from the assessment. Complete it or close the window.');
+        });
+
+        // Prevent mousewheel back/forward navigation
+        window.addEventListener('mousewheel', function(e) {
+            if (e.deltaX > 0 || e.deltaX < 0) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        function init() {
+            document.getElementById('totalQuestions').textContent = riddles.length;
+            document.getElementById('totalCount').textContent = riddles.length;
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const riddle = riddles[currentQuestion];
+            document.getElementById('currentQuestion').textContent = currentQuestion + 1;
+            document.getElementById('questionText').textContent = riddle.question;
+
+            // Render options
+            const optionsGrid = document.getElementById('optionsGrid');
+            optionsGrid.innerHTML = '';
+
+            riddle.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'option-button';
+                button.innerHTML = `
+                    <span class="option-letter">${String.fromCharCode(65 + index)}.</span>
+                    <span>${option.text}</span>
+                `;
+
+                if (currentQuestion in answers) {
+                    button.disabled = true;
+                    const answerData = answers[currentQuestion];
+                    if (answerData.optionIndex === index) {
+                        if (option.correct) {
+                            button.classList.add('correct');
+                        } else {
+                            button.classList.add('incorrect');
+                        }
+                    }
+                } else {
+                    button.onclick = () => handleAnswerClick(index);
+                }
+
+                optionsGrid.appendChild(button);
+            });
+
+            // Update progress
+            const progress = ((currentQuestion + 1) / riddles.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+
+            // Handle feedback visibility
+            const feedback = document.getElementById('feedback');
+            if (currentQuestion in answers) {
+                const isCorrect = answers[currentQuestion].isCorrect;
+                feedback.classList.add('show');
+                feedback.className = isCorrect ? 'feedback show correct' : 'feedback show incorrect';
+                document.getElementById('feedbackTitle').textContent = isCorrect ? '✓ Correct!' : 'Not quite right';
+                document.getElementById('feedbackText').textContent = riddle.feedback;
+            } else {
+                feedback.classList.remove('show');
+            }
+
+            // Update navigation buttons
+            document.getElementById('prevButton').disabled = currentQuestion === 0;
+            document.getElementById('nextButton').disabled = !(currentQuestion in answers);
+            document.getElementById('nextButton').textContent = currentQuestion === riddles.length - 1 ? 'Finish →' : 'Next →';
+        }
+
+        function handleAnswerClick(optionIndex) {
+            const isCorrect = riddles[currentQuestion].options[optionIndex].correct;
+            answers[currentQuestion] = { optionIndex, isCorrect };
+            selectedAnswer = optionIndex;
+            renderQuestion();
+        }
+
+        function handleNext() {
+            if (currentQuestion < riddles.length - 1) {
+                currentQuestion++;
+                selectedAnswer = null;
+                renderQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function handlePrevious() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                renderQuestion();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('assessmentView').style.display = 'none';
+            document.getElementById('resultsView').classList.add('active');
+
+            // Calculate score
+            assessmentCorrectCount = Object.values(answers).filter(a => a.isCorrect).length;
+            assessmentScore = Math.round((assessmentCorrectCount / riddles.length) * 100);
+
+            // Set score color
+            let scoreColor = '#28a745';
+            if (assessmentScore < 60) scoreColor = '#dc3545';
+            else if (assessmentScore < 80) scoreColor = '#ffc107';
+
+            document.getElementById('scoreValue').textContent = assessmentScore + '%';
+            document.getElementById('scoreValue').style.color = scoreColor;
+            document.getElementById('correctCount').textContent = assessmentCorrectCount;
+
+            // Set feedback message
+            let feedbackText = '';
+            if (assessmentScore >= 80) {
+                feedbackText = 'Excellent work! You demonstrate strong troubleshooting, communication, and support skills. You\'re well-prepared for this role.';
+            } else if (assessmentScore >= 60) {
+                feedbackText = 'Good effort! You have solid fundamentals. Review the areas where you had difficulty to strengthen your support skills.';
+            } else {
+                feedbackText = 'Keep practicing! Focus on developing systematic troubleshooting approaches, user communication, and ticket prioritization strategies.';
+            }
+            document.getElementById('scoreFeedback').textContent = feedbackText;
+
+            // Render review items
+            const reviewItems = document.getElementById('reviewItems');
+            reviewItems.innerHTML = '';
+
+            riddles.forEach((riddle, index) => {
+                const answer = answers[index];
+                if (answer) {
+                    const item = document.createElement('div');
+                    item.className = 'review-item ' + (answer.isCorrect ? 'correct' : 'incorrect');
+                    
+                    const statusClass = answer.isCorrect ? 'correct' : 'incorrect';
+                    const statusText = answer.isCorrect ? '✓ Correct' : '✗ Incorrect';
+                    
+                    item.innerHTML = `
+                        <div class="review-status ${statusClass}">${index + 1}. ${statusText}</div>
+                        <div class="review-text">${riddle.options[answer.optionIndex].text}</div>
+                    `;
+                    
+                    reviewItems.appendChild(item);
+                }
+            });
+        }
+
+        function generateResultsText() {
+            let text = 'APPLICATION SUPPORT ANALYST ASSESSMENT RESULTS\n';
+            text += '==========================================\n\n';
+            text += `Date: ${new Date().toLocaleString()}\n\n`;
+            text += `FINAL SCORE: ${assessmentScore}%\n`;
+            text += `Correct Answers: ${assessmentCorrectCount} out of ${riddles.length}\n\n`;
+            
+            if (assessmentScore >= 80) {
+                text += 'Assessment Result: EXCELLENT\n';
+                text += 'Demonstrates strong troubleshooting, communication, and support skills.\n\n';
+            } else if (assessmentScore >= 60) {
+                text += 'Assessment Result: GOOD\n';
+                text += 'Has solid fundamentals with some areas for improvement.\n\n';
+            } else {
+                text += 'Assessment Result: NEEDS IMPROVEMENT\n';
+                text += 'Should focus on systematic troubleshooting and communication skills.\n\n';
+            }
+
+            text += 'DETAILED ANSWERS:\n';
+            text += '==========================================\n\n';
+
+            riddles.forEach((riddle, index) => {
+                const answer = answers[index];
+                text += `Q${index + 1}: ${riddle.question}\n`;
+                text += `Your Answer: ${riddle.options[answer.optionIndex].text}\n`;
+                text += `Result: ${answer.isCorrect ? 'CORRECT ✓' : 'INCORRECT ✗'}\n`;
+                text += '\n';
+            });
+
+            return text;
+        }
+
+        function printResults() {
+            window.print();
+        }
+
+        function downloadAsText() {
+            const text = generateResultsText();
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', `Assessment_Results_${new Date().getTime()}.txt`);
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+
+        function copyToClipboard() {
+            const text = generateResultsText();
+            
+            navigator.clipboard.writeText(text).then(() => {
+                // Show notification
+                const notification = document.getElementById('copyNotification');
+                notification.classList.add('show');
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 2000);
+
+                // Open email client
+                const subject = encodeURIComponent('Support Analyst Assessment Results - Score: ' + assessmentScore + '%');
+                const body = encodeURIComponent('Please find my assessment results below:\n\n' + text);
+                window.location.href = `mailto:?subject=${subject}&body=${body}`;
+            }).catch(() => {
+                alert('Results copied! You can now paste them in an email.');
+            });
+        }
+
+        // Initialize on page load
+        init();
+    </script>
+</body>
+</html>
